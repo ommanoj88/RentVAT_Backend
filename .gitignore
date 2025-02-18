@@ -1,0 +1,28 @@
+# Java-specific
+*.class
+*.jar
+*.war
+*.ear
+
+# IntelliJ IDEA files
+.idea/
+*.iml
+
+# Eclipse files
+*.project
+*.classpath
+/.settings/
+
+# Maven / Gradle specific
+target/
+build/
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Application Properties (Keep sensitive info out of version control)
+src/main/resources/application.properties
