@@ -26,3 +26,4 @@ Thumbs.db
 
 # Application Properties (Keep sensitive info out of version control)
 src/main/resources/application.properties
+src/main/resources/firebase-service-account.json
