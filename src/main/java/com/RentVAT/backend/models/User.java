@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 @Entity
+@Table(name = "application_user") //
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,10 +18,27 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String firebaseUid;  // Unique ID from Firebase
+
     private String name;
     private String email;
     private String phone;
+    private String profileImage; // URL of profile picture
 
     @Enumerated(EnumType.STRING)
-    private Role role;  // Assuming you have a Role enum to represent the user's role (e.g., LENDER, RENTER)
+    private Role role;
+
+    public String getEmail() {
+        return email;
+    }
+    public String getName() {
+            return email;
+    }
+    public String getPhone() {
+            return email;
+}
+    public void setFirebaseUid(String firebaseUid) {
+        this.firebaseUid = firebaseUid;
+    }
 }
