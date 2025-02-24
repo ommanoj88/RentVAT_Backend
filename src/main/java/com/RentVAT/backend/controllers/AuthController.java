@@ -11,6 +11,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -23,14 +25,20 @@ public class AuthController {
 
     // Login endpoint
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody String token) {
+    public ResponseEntity<String> login(@RequestBody Map<String, String> request) {
         try {
+            String token = request.get("token"); // Extract token from JSON body
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.badRequest().body("Token is missing in the request");
+            }
+
             String uid = firebaseAuthService.verifyToken(token);
             return ResponseEntity.ok("Authenticated user ID: " + uid);
         } catch (FirebaseAuthException e) {
             return ResponseEntity.status(401).body("Invalid token: " + e.getMessage());
         }
     }
+
 
     // Registration endpoint
     @PostMapping("/register")
