@@ -1,42 +1,50 @@
 package com.RentVAT.backend.controllers;
 
 import com.RentVAT.backend.models.Listing;
-import com.RentVAT.backend.repositories.ListingRepository;
+import com.RentVAT.backend.service.ListingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/listings")
 public class ListingController {
 
     @Autowired
-    private ListingRepository listingRepository;
+    private ListingService listingService;
 
-    // ✅ Public: Get all listings (Browsing allowed)
-    @GetMapping
-    public List<Listing> getAllListings() {
-        return listingRepository.findAll();
+    @PostMapping
+    public ResponseEntity<Listing> createListing(@RequestBody Listing listing) {
+        Listing createdListing = listingService.createListing(listing);
+        return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
     }
 
-    // ✅ Public: Get a single listing
     @GetMapping("/{id}")
-    public Listing getListingById(@PathVariable Long id) {
-        return listingRepository.findById(id).orElse(null);
+    public ResponseEntity<Listing> getListingById(@PathVariable Long id) {
+        Optional<Listing> listing = listingService.getListingById(id);
+        return listing.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // 🔒 Protected: Create a listing (Login required)
-    @PostMapping("/create")
-    public Listing createListing(@RequestBody Listing listing) {
-        // TODO: Add authentication check before saving
-        return listingRepository.save(listing);
+    @GetMapping
+    public ResponseEntity<List<Listing>> getAllListings() {
+        List<Listing> listings = listingService.getAllListings();
+        return ResponseEntity.ok(listings);
     }
 
-    // 🔒 Protected: Rent or Buy an item (Login required)
-    @PostMapping("/{id}/rent")
-    public String rentItem(@PathVariable Long id) {
-        // TODO: Verify user authentication before allowing rental
-        return "Item rented successfully!";
+    @GetMapping("/rent")
+    public ResponseEntity<List<Listing>> getAvailableForRent() {
+        List<Listing> listings = listingService.getAvailableForRent();
+        return ResponseEntity.ok(listings);
+    }
+
+    @GetMapping("/sale")
+    public ResponseEntity<List<Listing>> getAvailableForSale() {
+        List<Listing> listings = listingService.getAvailableForSale();
+        return ResponseEntity.ok(listings);
     }
 }

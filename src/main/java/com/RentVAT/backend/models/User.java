@@ -1,44 +1,63 @@
 package com.RentVAT.backend.models;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
+import java.util.List;
 
 @Entity
-@Table(name = "application_user") //
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@Table(name = "users")
+@Getter
+@Setter
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String firebaseUid;  // Unique ID from Firebase
+    public String getUid() {
+        return uid;
+    }
 
-    private String name;
-    private String email;
-    private String phone;
-    private String profileImage; // URL of profile picture
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private String uid; // Firebase UID (New field added)
+
+    public String getUsername() {
+        return username;
+    }
 
     public String getEmail() {
         return email;
     }
-    public String getName() {
-            return email;
+
+    public void setEmail(String email) {
+        this.email = email;
     }
-    public String getPhone() {
-            return email;
-}
-    public void setFirebaseUid(String firebaseUid) {
-        this.firebaseUid = firebaseUid;
+
+    public void setUsername(String username) {
+        this.username = username;
     }
+
+    private String username;
+    private String email;
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    private String password; // Consider hashing this in a real application
+
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
+    private List<Listing> listings; // List of items listed by the user
 }
+

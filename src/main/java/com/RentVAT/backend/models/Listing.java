@@ -1,52 +1,33 @@
 package com.RentVAT.backend.models;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
+@Table(name = "listings")
 public class Listing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @Column(unique = true)
-    private String productId;  // Unique product identifier
-
     private String title;
     private String description;
-    private BigDecimal price;  // Total price (rent or buy)
-
-    @ElementCollection
-    private List<String> images;
-
-    private boolean isAvailable;
 
     @Enumerated(EnumType.STRING)
-    private TransactionType transactionType;
+    private com.RentVAT.backend.model.Category category;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    private BigDecimal price; // Unified price for renting and buying
+    private boolean availableForRent;
+    private boolean availableForSale;
 
-    // Generate productId automatically upon creation
-    @PrePersist
-    public void generateProductId() {
-        this.productId = "PROD" + System.currentTimeMillis(); // Or use UUID.randomUUID()
-    }
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private com.RentVAT.backend.models.User owner; // Reference to the user listing the item
 }
