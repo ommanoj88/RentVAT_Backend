@@ -28,6 +28,6 @@ public class Listing {
     private boolean availableForSale;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "owner_id",nullable = false)
     private com.RentVAT.backend.models.User owner; // Reference to the user listing the item
 }

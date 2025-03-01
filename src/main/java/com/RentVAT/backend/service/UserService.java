@@ -14,8 +14,8 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public User createUser(User user) {
-        return userRepository.save(user);
+    public void saveUser(User user) {
+        userRepository.save(user);
     }
 
     public Optional<User> getUserById(Long id) {
@@ -29,8 +29,7 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-
-    public void saveUser(User user) {
-        userRepository.save(user);
+    public Optional<User> getUserByUid(String uid) {
+        return userRepository.findByUid(uid);
     }
 }

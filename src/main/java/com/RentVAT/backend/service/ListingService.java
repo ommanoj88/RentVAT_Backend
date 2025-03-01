@@ -1,7 +1,9 @@
 package com.RentVAT.backend.service;
 
 import com.RentVAT.backend.models.Listing;
+import com.RentVAT.backend.models.User;
 import com.RentVAT.backend.repository.ListingRepository;
+import com.RentVAT.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +16,19 @@ public class ListingService {
     @Autowired
     private ListingRepository listingRepository;
 
+    @Autowired
+    private UserRepository userRepository; // ✅ Inject UserRepository
+
     public Listing createListing(Listing listing) {
+        if (listing.getOwner() == null || listing.getOwner().getId() == null) {
+            throw new IllegalArgumentException("Owner must be specified");
+        }
+
+        // ✅ Use the injected userRepository instance
+        User owner = userRepository.findById(listing.getOwner().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid owner ID"));
+
+        listing.setOwner(owner);  // Explicitly set owner
         return listingRepository.save(listing);
     }
 

@@ -26,6 +26,7 @@ public class User {
         this.uid = uid;
     }
 
+    @Column(unique = true, nullable = false)
     private String uid; // Firebase UID (New field added)
 
     public String getUsername() {
@@ -45,17 +46,11 @@ public class User {
     }
 
     private String username;
+
+    @Column(unique = true, nullable = false)
     private String email;
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    private String password; // Consider hashing this in a real application
+ // Consider hashing this in a real application
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Listing> listings; // List of items listed by the user
