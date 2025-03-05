@@ -19,6 +19,9 @@ public class Listing {
 
     private String title;
     private String description;
+    private String address;
+    private String city;
+    private String createdAt;
 
     @Enumerated(EnumType.STRING)
     private com.RentVAT.backend.model.Category category;

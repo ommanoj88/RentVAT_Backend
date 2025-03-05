@@ -1,12 +1,18 @@
 package com.RentVAT.backend.service;
 
+import com.RentVAT.backend.dto.ListingDTO;
 import com.RentVAT.backend.models.Listing;
 import com.RentVAT.backend.models.User;
 import com.RentVAT.backend.repository.ListingRepository;
 import com.RentVAT.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,4 +53,25 @@ public class ListingService {
     public List<Listing> getAvailableForSale() {
         return listingRepository.findByAvailableForSaleTrue();
     }
+
+    public Page<ListingDTO> searchListings(String query, String category, String city,
+                                           BigDecimal minPrice, BigDecimal maxPrice,
+                                           boolean rent, boolean sale, Pageable pageable) {
+
+        Page<Listing> listings = listingRepository.searchListings(query, category, city,
+                minPrice, maxPrice,
+                rent, sale, pageable);
+
+        // Convert Listing to ListingDTO
+        return listings.map(listing -> new ListingDTO(
+                listing.getId(),
+                listing.getTitle(),
+                listing.getPrice()
+
+        ));
+    }
+
+
+
+
 }
