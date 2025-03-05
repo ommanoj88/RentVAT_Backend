@@ -20,25 +20,34 @@ public class AuthController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
+    public ResponseEntity<String> register(@RequestBody Map<String, String> request) {
         try {
-            // Check if email already exists in the database
-            Optional<User> existingUser = userService.getUserByEmail(user.getEmail());
+            String email = request.get("email");
+            String password = request.get("password");
+            String username = request.get("username");
+
+            if (email == null || password == null || username == null) {
+                return ResponseEntity.badRequest().body("Email, password, and username are required");
+            }
+
+            // Check if email already exists
+            Optional<User> existingUser = userService.getUserByEmail(email);
             if (existingUser.isPresent()) {
                 return ResponseEntity.badRequest().body("Email already exists!");
             }
 
-            // Create user in Firebase Authentication (Firebase handles password)
-            UserRecord.CreateRequest request = new UserRecord.CreateRequest()
-                    .setEmail(user.getEmail());
+            // Create user in Firebase Authentication
+            UserRecord.CreateRequest firebaseRequest = new UserRecord.CreateRequest()
+                    .setEmail(email)
+                    .setPassword(password); // ✅ Set password here!
 
-            UserRecord userRecord = FirebaseAuth.getInstance().createUser(request);
+            UserRecord userRecord = FirebaseAuth.getInstance().createUser(firebaseRequest);
 
-            // Save user details in PostgreSQL (WITHOUT password)
+            // Save user details in PostgreSQL (excluding password for security reasons)
             User newUser = User.builder()
                     .uid(userRecord.getUid()) // Store Firebase UID
-                    .username(user.getUsername())
-                    .email(user.getEmail())
+                    .username(username)
+                    .email(email)
                     .build();
 
             userService.saveUser(newUser);
