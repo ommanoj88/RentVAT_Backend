@@ -50,6 +50,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Transient
+    private String password;
  // Consider hashing this in a real application
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
