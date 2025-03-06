@@ -1,5 +1,6 @@
 package com.RentVAT.backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -54,6 +55,7 @@ public class User {
     private String password;
  // Consider hashing this in a real application
 
+    @JsonIgnore
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Listing> listings; // List of items listed by the user
 }

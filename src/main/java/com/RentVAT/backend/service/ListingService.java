@@ -54,7 +54,15 @@ public class ListingService {
         return listingRepository.findByAvailableForSaleTrue();
     }
 
-    public Page<ListingDTO> searchListings(String query, String category, String city,
+    public Listing updateListing(Listing listing) {
+        return listingRepository.save(listing);
+    }
+
+    public void deleteListingById(Long id) {
+        listingRepository.deleteById(id);
+    }
+
+    public Page<ListingDTO> searchListings(String query, com.RentVAT.backend.model.Category category, String city,
                                            BigDecimal minPrice, BigDecimal maxPrice,
                                            boolean rent, boolean sale, Pageable pageable) {
 

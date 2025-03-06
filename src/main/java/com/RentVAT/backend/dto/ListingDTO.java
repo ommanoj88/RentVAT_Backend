@@ -6,7 +6,7 @@ public class ListingDTO {
     private Long id;
     private String title;
     private BigDecimal price;
-    private String photoUrl;
+    //private String photoUrl;
 
     // Constructor
     public ListingDTO(Long id, String title, BigDecimal price) {
@@ -28,7 +28,7 @@ public class ListingDTO {
         return price;
     }
 
-    public String getPhotoUrl() {
-        return photoUrl;
-    }
+//    public String getPhotoUrl() {
+//        return photoUrl;
+//    }
 }

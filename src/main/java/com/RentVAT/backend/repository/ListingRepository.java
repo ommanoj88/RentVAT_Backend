@@ -17,15 +17,25 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
     List<Listing> findByAvailableForSaleTrue(); // Find listings available for sale
 
     @Query("SELECT l FROM Listing l WHERE " +
-            "(:query IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "(COALESCE(:query, '') = '' OR LOWER(l.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "AND (:category IS NULL OR l.category = :category) " +
-            "AND (:city IS NULL OR LOWER(l.city) = LOWER(:city)) " +
-            "AND (:minPrice IS NULL OR l.price >= :minPrice) " +
-            "AND (:maxPrice IS NULL OR l.price <= :maxPrice) " +
-            "AND (:rent IS NULL OR :rent = false OR l.availableForRent = true) " +
-            "AND (:sale IS NULL OR :sale = false OR l.availableForSale = true)")
-    Page<Listing> searchListings(String query, String category, String city,
-                                 BigDecimal minPrice, BigDecimal maxPrice,
-                                 Boolean rent, Boolean sale, Pageable pageable);
+            "AND (:city IS NULL OR LOWER(l.city) = LOWER(:city)) " +  // ✅ Case-insensitive city search
+            "AND (l.price BETWEEN :minPrice AND :maxPrice) " +
+            "AND (" +
+            "    (:rent = TRUE AND l.availableForRent = TRUE) " +
+            "    OR (:sale = TRUE AND l.availableForSale = TRUE) " +
+            ")"
+    )
+    Page<Listing> searchListings(
+            @Param("query") String query,
+            @Param("category") com.RentVAT.backend.model.Category category,
+            @Param("city") String city,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("rent") Boolean rent,
+            @Param("sale") Boolean sale,
+            Pageable pageable);
+
+
 
 }

@@ -28,27 +28,149 @@ public class ListingController {
     @PostMapping
     public ResponseEntity<?> createListing(@RequestHeader("Authorization") String token, @RequestBody Listing listing) {
         try {
-            // Verify Firebase Token
-            String idToken = token.replace("Bearer ", "");
+            // **Step 1: Validate the Authorization header**
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
+            }
+
+            // **Step 2: Extract the token and remove extra quotes**
+            String idToken = token.replace("Bearer ", "").trim();
+
+            // Fix: Ensure quotes are removed if present
+            idToken = idToken.replaceAll("^\"|\"$", "");
+
+            // Debugging: Print the cleaned token (Remove in production)
+            System.out.println("Cleaned Token: " + idToken);
+
+            // **Step 3: Verify Firebase Token**
             FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
             String userUid = decodedToken.getUid();
 
-            // Find the User by UID
+            // **Step 4: Find the user in the database**
             Optional<User> userOptional = userService.getUserByUid(userUid);
             if (userOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
             }
             User user = userOptional.get();
 
-            // Assign the authenticated user as the owner of the listing
+            // **Step 5: Set the owner of the listing and save it**
             listing.setOwner(user);
             Listing createdListing = listingService.createListing(listing);
 
             return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
         }
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateListing(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id,
+            @RequestBody Listing updatedListing) {
+        try {
+            // **Step 1: Validate the Authorization header**
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
+            }
+
+            // **Step 2: Extract and clean the token**
+            String idToken = token.replace("Bearer ", "").trim();
+            idToken = idToken.replaceAll("^\"|\"$", "");
+
+            // **Step 3: Verify Firebase Token**
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String userUid = decodedToken.getUid();
+
+            // **Step 4: Find the user in the database**
+            Optional<User> userOptional = userService.getUserByUid(userUid);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            }
+            User user = userOptional.get();
+
+            // **Step 5: Find the existing listing**
+            Optional<Listing> existingListingOptional = listingService.getListingById(id);
+            if (existingListingOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Listing not found");
+            }
+
+            Listing existingListing = existingListingOptional.get();
+
+            // **Step 6: Ensure the user owns the listing**
+            if (!existingListing.getOwner().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to update this listing");
+            }
+
+            // **Step 7: Update the listing details**
+            existingListing.setTitle(updatedListing.getTitle());
+            existingListing.setDescription(updatedListing.getDescription());
+            existingListing.setAddress(updatedListing.getAddress());
+            existingListing.setCity(updatedListing.getCity());
+            existingListing.setCategory(updatedListing.getCategory());
+            existingListing.setPrice(updatedListing.getPrice());
+            existingListing.setAvailableForRent(updatedListing.isAvailableForRent());
+            existingListing.setAvailableForSale(updatedListing.isAvailableForSale());
+
+            // **Step 8: Save the updated listing**
+            Listing savedListing = listingService.updateListing(existingListing);
+
+            return ResponseEntity.ok(savedListing);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating listing: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteListing(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long id) {
+        try {
+            // **Step 1: Validate the Authorization header**
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
+            }
+
+            // **Step 2: Extract and clean the token**
+            String idToken = token.replace("Bearer ", "").trim();
+            idToken = idToken.replaceAll("^\"|\"$", "");
+
+            // **Step 3: Verify Firebase Token**
+            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(idToken);
+            String userUid = decodedToken.getUid();
+
+            // **Step 4: Find the user in the database**
+            Optional<User> userOptional = userService.getUserByUid(userUid);
+            if (userOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+            }
+            User user = userOptional.get();
+
+            // **Step 5: Find the listing by ID**
+            Optional<Listing> existingListingOptional = listingService.getListingById(id);
+            if (existingListingOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Listing not found");
+            }
+
+            Listing existingListing = existingListingOptional.get();
+
+            // **Step 6: Ensure the user owns the listing**
+            if (!existingListing.getOwner().getId().equals(user.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to delete this listing");
+            }
+
+            // **Step 7: Delete the listing**
+            listingService.deleteListingById(id);
+
+            return ResponseEntity.ok("Listing deleted successfully");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting listing: " + e.getMessage());
+        }
+    }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Listing> getListingById(@PathVariable Long id) {
