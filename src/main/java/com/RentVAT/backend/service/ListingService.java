@@ -74,7 +74,7 @@ public class ListingService {
         return listings.map(listing -> new ListingDTO(
                 listing.getId(),
                 listing.getTitle(),
-                listing.getPrice()
+                listing.getPrice1Day()
 
         ));
     }

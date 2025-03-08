@@ -19,8 +19,8 @@ public interface ListingRepository extends JpaRepository<Listing, Long> {
     @Query("SELECT l FROM Listing l WHERE " +
             "(COALESCE(:query, '') = '' OR LOWER(l.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "AND (:category IS NULL OR l.category = :category) " +
-            "AND (:city IS NULL OR LOWER(l.city) = LOWER(:city)) " +  // ✅ Case-insensitive city search
-            "AND (l.price BETWEEN :minPrice AND :maxPrice) " +
+            "AND (COALESCE(:city, '') = '' OR LOWER(l.city) = LOWER(:city)) " +  // ✅ Handles NULL city
+            "AND (l.price1Day BETWEEN COALESCE(:minPrice, 0) AND COALESCE(:maxPrice, 9999999)) " +  // ✅ Handles NULL price
             "AND (" +
             "    (:rent = TRUE AND l.availableForRent = TRUE) " +
             "    OR (:sale = TRUE AND l.availableForSale = TRUE) " +

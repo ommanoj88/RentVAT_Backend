@@ -108,7 +108,9 @@ public class ListingController {
             existingListing.setAddress(updatedListing.getAddress());
             existingListing.setCity(updatedListing.getCity());
             existingListing.setCategory(updatedListing.getCategory());
-            existingListing.setPrice(updatedListing.getPrice());
+            existingListing.setPrice1Day(updatedListing.getPrice1Day());
+            existingListing.setPrice3Days(updatedListing.getPrice3Days());
+            existingListing.setPrice7Days(updatedListing.getPrice7Days());
             existingListing.setAvailableForRent(updatedListing.isAvailableForRent());
             existingListing.setAvailableForSale(updatedListing.isAvailableForSale());
 
