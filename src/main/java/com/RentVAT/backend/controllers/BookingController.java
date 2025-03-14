@@ -1,5 +1,6 @@
 package com.RentVAT.backend.controllers;
 
+import com.RentVAT.backend.dto.BookingEditRequestDTO;
 import com.RentVAT.backend.dto.BookingRequestDTO;
 import com.RentVAT.backend.dto.BookingResponseDTO;
 import com.RentVAT.backend.models.*;
@@ -217,6 +218,78 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
         }
     }
+    @PutMapping("/edit-booking/{bookingId}")
+    public ResponseEntity<?> editBooking(
+            @PathVariable Long bookingId,
+            @RequestHeader("Authorization") String token,
+            @RequestBody BookingEditRequestDTO editRequest) {
+        try {
+            User renter = authenticateUser(token);
+            Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+
+            if (optionalBooking.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
+            }
+
+            Booking booking = optionalBooking.get();
+
+            // ✅ Only allow edits if status is "PENDING"
+            if (!booking.getStatus().equals(Booking.BookingStatus.PENDING)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only pending bookings can be edited.");
+            }
+
+            // ✅ Ensure the user trying to edit is the renter
+            if (!booking.getRenter().getId().equals(renter.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only edit your own bookings.");
+            }
+
+            // Update booking details
+            booking.setStartDate(editRequest.getStartDate());
+            booking.setEndDate(editRequest.getEndDate());
+            booking.setTotalPrice(editRequest.getTotalPrice());
+
+            bookingRepository.save(booking);
+
+            return ResponseEntity.ok("Booking updated successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/cancel-booking/{bookingId}")
+    public ResponseEntity<?> cancelBooking(
+            @PathVariable Long bookingId,
+            @RequestHeader("Authorization") String token) {
+        try {
+            User renter = authenticateUser(token);
+            Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+
+            if (optionalBooking.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found");
+            }
+
+            Booking booking = optionalBooking.get();
+
+            // ✅ Ensure the user trying to cancel is the renter
+            if (!booking.getRenter().getId().equals(renter.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You can only cancel your own bookings.");
+            }
+
+            // ✅ Allow cancellation only if the booking is still pending
+            if (!booking.getStatus().equals(Booking.BookingStatus.PENDING)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("You can only cancel pending bookings.");
+            }
+
+            // ✅ Update status to "CANCELLED_BY_RENTER"
+            booking.setStatus(Booking.BookingStatus.CANCELLED_BY_RENTER);
+            bookingRepository.save(booking);
+
+            return ResponseEntity.ok("Booking cancelled successfully!");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+        }
+    }
+
 
 
     private BigDecimal calculatePrice(Listing listing, long days) {
