@@ -188,6 +188,37 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/my-bookings")
+    public ResponseEntity<?> getUserBookings(@RequestHeader("Authorization") String token) {
+        try {
+            User renter = authenticateUser(token);
+            List<Booking> bookings = bookingRepository.findByRenterId(renter.getId());
+
+            List<BookingResponseDTO> bookingResponses = bookings.stream().map(booking ->
+                    new BookingResponseDTO(
+                            booking.getId(),
+                            booking.getRenter().getId(),
+                            booking.getRenter().getUsername(),
+                            booking.getRenter().getEmail(),
+                            booking.getStartDate(),
+                            booking.getEndDate(),
+                            booking.getStatus().name(),
+                            booking.getTotalPrice(),
+                            booking.getRentalPrice(),
+                            booking.getPlatformCommission(),
+                            booking.isKycVerified(),
+                            booking.getCreatedAt()
+
+                    )
+            ).collect(Collectors.toList());
+
+            return ResponseEntity.ok(bookingResponses);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+        }
+    }
+
+
     private BigDecimal calculatePrice(Listing listing, long days) {
         BigDecimal totalPrice = BigDecimal.ZERO;
         long remainingDays = days;
