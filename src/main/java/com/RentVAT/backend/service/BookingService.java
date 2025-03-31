@@ -5,11 +5,20 @@ import com.RentVAT.backend.repository.BookingRepository;
 import com.RentVAT.backend.repository.ListingRepository;
 import com.RentVAT.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -91,4 +100,56 @@ public class BookingService {
         // TODO: Release payment here
         return bookingRepository.save(booking);
     }
+
+
+    public void confirmPayment(Long bookingId) {
+        Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
+
+        if (optionalBooking.isPresent()) {
+            Booking booking = optionalBooking.get();
+
+            // ✅ Update status to PAYMENT_DONE
+            booking.setStatus(Booking.BookingStatus.PAYMENT_DONE);
+            bookingRepository.save(booking);
+
+            // ✅ Check if renter is KYC verified
+            User renter = booking.getRenter();
+            if (!renter.isKycVerified()) {
+                startKycVerification(renter); // 🔥 Trigger KYC if not verified
+            }
+        } else {
+            throw new RuntimeException("Booking not found");
+        }
+    }
+
+
+    public void startKycVerification(User renter) {
+        System.out.println("Starting external KYC verification for user: " + renter.getId());
+
+        // Mock API call to an external KYC provider
+        String kycProviderUrl = "https://api.kycprovider.com/verify"; // Replace with actual API URL
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Prepare request body (Example: sending user ID & document URL)
+        Map<String, String> requestBody = new HashMap<>();
+        requestBody.put("userId", renter.getId().toString());
+        requestBody.put("documentUrl", "https://yourstorage.com/user_kyc_doc.jpg"); // Example document URL
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Authorization", "Bearer YOUR_KYC_API_KEY"); // Add your KYC API Key
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(kycProviderUrl, requestEntity, String.class);
+
+        // Process the response
+        if (response.getStatusCode() == HttpStatus.OK) {
+            System.out.println("KYC verification started successfully.");
+        } else {
+            System.out.println("Failed to start KYC verification: " + response.getBody());
+        }
+    }
+
 }

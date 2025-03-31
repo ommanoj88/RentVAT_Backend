@@ -7,6 +7,7 @@ import com.RentVAT.backend.models.*;
 import com.RentVAT.backend.repository.BookingRepository;
 import com.RentVAT.backend.repository.ListingRepository;
 import com.RentVAT.backend.repository.UserRepository;
+import com.RentVAT.backend.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,14 +27,18 @@ import java.util.stream.Collectors;
 @RequestMapping("api/bookings")
 public class BookingController {
 
+
     private final BookingRepository bookingRepository;
     private final ListingRepository listingRepository;
     private final UserRepository userRepository;
+    private final UserService userService;
 
-    public BookingController(BookingRepository bookingRepository, ListingRepository listingRepository, UserRepository userRepository) {
+
+    public BookingController(BookingRepository bookingRepository, ListingRepository listingRepository, UserRepository userRepository,UserService userService) {
         this.bookingRepository = bookingRepository;
         this.listingRepository = listingRepository;
         this.userRepository = userRepository;
+        this.userService=userService;
     }
 
     private User authenticateUser(String token) throws Exception {
@@ -289,7 +295,6 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
         }
     }
-
 
 
     private BigDecimal calculatePrice(Listing listing, long days) {

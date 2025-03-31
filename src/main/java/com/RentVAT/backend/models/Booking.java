@@ -58,6 +58,6 @@ public class Booking {
     }
 
     public enum BookingStatus {
-        PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED_BY_RENTER
+        PENDING, ACCEPTED, REJECTED, COMPLETED, CANCELLED_BY_RENTER, PAYMENT_DONE
     }
 }

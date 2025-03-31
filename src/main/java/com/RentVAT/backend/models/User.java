@@ -58,5 +58,12 @@ public class User {
     @JsonIgnore
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Listing> listings; // List of items listed by the user
+
+    @Column(nullable = false)
+    private boolean kycVerified = false; // New field for KYC status
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private KycVerification kycVerification;
+
 }
 

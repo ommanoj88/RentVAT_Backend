@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/search")
+@CrossOrigin(origins = "http://localhost:3000")
 public class SearchController {
 
     @Autowired

@@ -29,49 +29,18 @@ public class Listing {
 
     private String address;
     private String city;
+
     @Column(updatable = false) // Prevent updates
     private LocalDateTime createdAt;
+
     // Automatically set createdAt before saving to DB
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
-
     @Enumerated(EnumType.STRING)
     private com.RentVAT.backend.model.Category category;
-
-    public BigDecimal getPrice1Day() {
-        return price1Day;
-    }
-
-    public void setPrice1Day(BigDecimal price1Day) {
-        this.price1Day = price1Day;
-    }
-
-    public BigDecimal getPrice3Days() {
-        return price3Days;
-    }
-
-    public void setPrice3Days(BigDecimal price3Days) {
-        this.price3Days = price3Days;
-    }
-
-    public BigDecimal getPrice7Days() {
-        return price7Days;
-    }
-
-    public void setPrice7Days(BigDecimal price7Days) {
-        this.price7Days = price7Days;
-    }
-
-    public BigDecimal getSalePrice() {
-        return salePrice;
-    }
-
-    public void setSalePrice(BigDecimal salePrice) {
-        this.salePrice = salePrice;
-    }
 
     @Column(nullable = false)
     private BigDecimal price1Day; // Price for 1-day rental
