@@ -21,6 +21,11 @@ public class FirebaseConfig {
     public FirebaseApp firebaseApp() {
         System.out.println("Firebase Config Path: " + firebaseConfigPath); // Debugging line
 
+        // Check if Firebase is already initialized
+        if (!FirebaseApp.getApps().isEmpty()) {
+            return FirebaseApp.getInstance();
+        }
+
         File file = new File(firebaseConfigPath);
         if (!file.exists()) {
             throw new RuntimeException("Firebase config file not found at: " + firebaseConfigPath);

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.Optional;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -68,6 +69,22 @@ public class AuthController {
 
             // Verify Firebase Token
             String uid = FirebaseAuth.getInstance().verifyIdToken(token).getUid();
+            
+            // Get user from Firebase to get email
+            UserRecord userRecord = FirebaseAuth.getInstance().getUser(uid);
+            
+            // Check if user exists in database, if not create them
+            Optional<User> existingUser = userService.getUserByUid(uid);
+            if (existingUser.isEmpty()) {
+                // User logged in via Firebase but not in our DB, create them
+                User newUser = User.builder()
+                        .uid(uid)
+                        .email(userRecord.getEmail())
+                        .username(userRecord.getEmail() != null ? userRecord.getEmail().split("@")[0] : "user")
+                        .build();
+                userService.saveUser(newUser);
+            }
+            
             return ResponseEntity.ok("Authenticated user ID: " + uid);
         } catch (FirebaseAuthException e) {
             return ResponseEntity.status(401).body("Invalid token: " + e.getMessage());
