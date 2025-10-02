@@ -15,6 +15,7 @@ import java.util.List;
 public interface ListingRepository extends JpaRepository<Listing, Long> {
     List<Listing> findByAvailableForRentTrue(); // Find listings available for rent
     List<Listing> findByAvailableForSaleTrue(); // Find listings available for sale
+    List<Listing> findByOwnerId(Long ownerId); // Find listings by owner ID
 
     @Query("SELECT l FROM Listing l WHERE " +
             "(COALESCE(:query, '') = '' OR LOWER(l.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(l.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +

@@ -96,12 +96,49 @@ public class BookingController {
             Listing listing = listingRepository.findById(bookingRequest.getListingId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid listing ID."));
 
+            // ✅ VALIDATION 1: Prevent users from renting own listings
             if (listing.getOwner().getId().equals(renter.getId())) {
                 return ResponseEntity.badRequest().body("You cannot rent your own listing.");
             }
 
+            // ✅ VALIDATION 2: Parse and validate dates
+            LocalDate startDate;
+            LocalDate endDate;
+            try {
+                startDate = LocalDate.parse(bookingRequest.getStartDate());
+                endDate = LocalDate.parse(bookingRequest.getEndDate());
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().body("Invalid date format. Use YYYY-MM-DD.");
+            }
+
+            // ✅ VALIDATION 3: Prevent past dates
+            LocalDate today = LocalDate.now();
+            if (startDate.isBefore(today)) {
+                return ResponseEntity.badRequest().body("Start date cannot be in the past.");
+            }
+
+            // ✅ VALIDATION 4: Validate end date > start date
+            if (endDate.isBefore(startDate) || endDate.isEqual(startDate)) {
+                return ResponseEntity.badRequest().body("End date must be after start date.");
+            }
+
+            // ✅ VALIDATION 5: Check for date overlaps (prevent double booking)
+            List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
+                listing.getId(), startDate, endDate
+            );
+            if (!overlappingBookings.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                    "This listing is already booked for the selected dates. Please choose different dates."
+                );
+            }
+
+            // ✅ VALIDATION 6: Validate maximum rental duration (e.g., 90 days)
+            long days = ChronoUnit.DAYS.between(startDate, endDate) + 1;
+            if (days > 90) {
+                return ResponseEntity.badRequest().body("Maximum rental duration is 90 days.");
+            }
+
             // Calculate rental price and commission
-            long days = ChronoUnit.DAYS.between(LocalDate.parse(bookingRequest.getStartDate()), LocalDate.parse(bookingRequest.getEndDate())) + 1;
             BigDecimal rentalPrice = calculatePrice(listing, days);
             BigDecimal platformCommission = rentalPrice.multiply(BigDecimal.valueOf(0.05)).max(BigDecimal.valueOf(50));
             BigDecimal totalAmount = rentalPrice.add(platformCommission);
@@ -110,9 +147,9 @@ public class BookingController {
             Booking booking = Booking.builder()
                     .listing(listing)
                     .renter(renter)
-                    .startDate(LocalDate.parse(bookingRequest.getStartDate()))
-                    .endDate(LocalDate.parse(bookingRequest.getEndDate()))
-                    .rentalPrice(rentalPrice) // Ensure rentalPrice is set
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .rentalPrice(rentalPrice)
                     .platformCommission(platformCommission)
                     .totalPrice(totalAmount)
                     .status(Booking.BookingStatus.PENDING)
@@ -122,8 +159,11 @@ public class BookingController {
 
             return ResponseEntity.ok("Booking request submitted. Rental Price: Rs " + rentalPrice +
                     ", Platform Fee: Rs " + platformCommission + ", Total Amount: Rs " + totalAmount);
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getReason());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication failed: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating booking: " + e.getMessage());
         }
     }
 

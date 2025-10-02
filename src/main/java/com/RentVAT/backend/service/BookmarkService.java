@@ -43,7 +43,26 @@ public class BookmarkService {
     public List<ListingDTO> getAllBookmarkedListings(Long userId) {
         List<Bookmark> bookmarks = bookmarkRepository.findByUserId(userId);
         return bookmarks.stream()
-                .map(bookmark -> new ListingDTO(bookmark.getListing().getId(), bookmark.getListing().getTitle(), bookmark.getListing().getPrice1Day()))
+                .map(bookmark -> {
+                    Listing listing = bookmark.getListing();
+                    return new ListingDTO(
+                            listing.getId(),
+                            listing.getTitle(),
+                            listing.getDescription(),
+                            listing.getAddress(),
+                            listing.getCity(),
+                            listing.getCategory() != null ? listing.getCategory().toString() : null,
+                            listing.getPrice1Day(),
+                            listing.getPrice3Days(),
+                            listing.getPrice7Days(),
+                            listing.getSalePrice(),
+                            listing.isAvailableForRent(),
+                            listing.isAvailableForSale(),
+                            listing.getCreatedAt(),
+                            listing.getOwner() != null ? listing.getOwner().getId() : null,
+                            listing.getOwner() != null ? listing.getOwner().getUsername() : null
+                    );
+                })
                 .toList();
     }
 }

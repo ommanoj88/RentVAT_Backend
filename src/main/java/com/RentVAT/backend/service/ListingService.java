@@ -70,16 +70,29 @@ public class ListingService {
                 minPrice, maxPrice,
                 rent, sale, pageable);
 
-        // Convert Listing to ListingDTO
+        // ✅ FIXED: Convert Listing to ListingDTO with ALL fields
         return listings.map(listing -> new ListingDTO(
                 listing.getId(),
                 listing.getTitle(),
-                listing.getPrice1Day()
-
+                listing.getDescription(),
+                listing.getAddress(),
+                listing.getCity(),
+                listing.getCategory() != null ? listing.getCategory().toString() : null,
+                listing.getPrice1Day(),
+                listing.getPrice3Days(),
+                listing.getPrice7Days(),
+                listing.getSalePrice(),
+                listing.isAvailableForRent(),
+                listing.isAvailableForSale(),
+                listing.getCreatedAt(),
+                listing.getOwner() != null ? listing.getOwner().getId() : null,
+                listing.getOwner() != null ? listing.getOwner().getUsername() : null
         ));
     }
 
-
+    public List<Listing> getListingsByOwnerId(Long ownerId) {
+        return listingRepository.findByOwnerId(ownerId);
+    }
 
 
 }

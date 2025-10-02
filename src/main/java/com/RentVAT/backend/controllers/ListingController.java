@@ -36,11 +36,8 @@ public class ListingController {
 
             // **Step 2: Extract the token and remove extra quotes**
             String idToken = token.replace("Bearer ", "").trim();
-
-            // Fix: Ensure quotes are removed if present
             idToken = idToken.replaceAll("^\"|\"$", "");
 
-            // Debugging: Print the cleaned token (Remove in production)
             System.out.println("Cleaned Token: " + idToken);
 
             // **Step 3: Verify Firebase Token**
@@ -54,14 +51,41 @@ public class ListingController {
             }
             User user = userOptional.get();
 
+            // ✅ **NEW: Validate listing data**
+            if (listing.getTitle() == null || listing.getTitle().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Title is required");
+            }
+            if (listing.getDescription() == null || listing.getDescription().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Description is required");
+            }
+            if (listing.getCity() == null || listing.getCity().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("City is required");
+            }
+            if (listing.getAddress() == null || listing.getAddress().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Address is required");
+            }
+            if (listing.getPrice1Day() == null || listing.getPrice1Day().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body("Valid price for 1 day is required");
+            }
+
+            // ✅ **NEW: Ensure price3Days and price7Days default to price1Day if not set**
+            if (listing.getPrice3Days() == null || listing.getPrice3Days().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                listing.setPrice3Days(listing.getPrice1Day().multiply(java.math.BigDecimal.valueOf(3)));
+            }
+            if (listing.getPrice7Days() == null || listing.getPrice7Days().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+                listing.setPrice7Days(listing.getPrice1Day().multiply(java.math.BigDecimal.valueOf(7)));
+            }
+
             // **Step 5: Set the owner of the listing and save it**
             listing.setOwner(user);
             Listing createdListing = listingService.createListing(listing);
 
             return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Validation error: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating listing: " + e.getMessage());
         }
     }
     @PutMapping("/{id}")
@@ -197,6 +221,12 @@ public class ListingController {
     @GetMapping("/sale")
     public ResponseEntity<List<Listing>> getAvailableForSale() {
         List<Listing> listings = listingService.getAvailableForSale();
+        return ResponseEntity.ok(listings);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Listing>> getListingsByUserId(@PathVariable Long userId) {
+        List<Listing> listings = listingService.getListingsByOwnerId(userId);
         return ResponseEntity.ok(listings);
     }
 }

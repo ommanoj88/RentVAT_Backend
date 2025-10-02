@@ -33,12 +33,6 @@ public class Listing {
     @Column(updatable = false) // Prevent updates
     private LocalDateTime createdAt;
 
-    // Automatically set createdAt before saving to DB
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
     @Enumerated(EnumType.STRING)
     private com.RentVAT.backend.model.Category category;
 
@@ -58,4 +52,33 @@ public class Listing {
     @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Booking> bookings; // List of bookings associated with this listing
+
+    // ✅ Combined: onCreate and validation in single @PrePersist method
+    @PrePersist
+    protected void onPrePersist() {
+        this.createdAt = LocalDateTime.now();
+        validatePrices();
+    }
+
+    // ✅ Validation on update as well
+    @PreUpdate
+    protected void onPreUpdate() {
+        validatePrices();
+    }
+
+    // ✅ Price validation method
+    private void validatePrices() {
+        if (price1Day != null && price1Day.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price for 1 day must be positive");
+        }
+        if (price3Days != null && price3Days.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price for 3 days must be positive");
+        }
+        if (price7Days != null && price7Days.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Price for 7 days must be positive");
+        }
+        if (salePrice != null && salePrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Sale price must be positive");
+        }
+    }
 }
